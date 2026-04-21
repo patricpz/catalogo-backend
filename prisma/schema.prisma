@@ -67,3 +67,12 @@ model OrderItem {
 
   @@index([orderId])
 }
+
+model DemoNote {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  body      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("demo_notes")
+}
