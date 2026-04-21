@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat -ano)",
+      "Bash(taskkill //PID 3724 //F)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "Bash(npx prisma:*)",
+      "Bash(npx tsx:*)"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  store     Store?
+}
+
+model Store {
+  id             String    @id @default(uuid())
+  name           String
+  slug           String    @unique
+  image          String?
+  whatsappNumber String?
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products       Product[]
+  orders         Order[]
+
+  @@index([slug])
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  image       String?
+  price       Decimal   @db.Decimal(10, 2)
+  available   Boolean   @default(true)
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storeId])
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  total        Decimal     @db.Decimal(10, 2)
+  whatsappLink String?
+  storeId      String
+  store        Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
+  createdAt    DateTime    @default(now())
+
+  @@index([storeId])
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  product   String  // product name snapshot
+  price     Decimal @db.Decimal(10, 2) // price snapshot
+  quantity  Int     @default(1)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // productId stored as plain string for reference only (no FK constraint)
+
+  @@index([orderId])
+}
