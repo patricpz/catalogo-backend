@@ -17,6 +17,7 @@ export class UserRepository {
       data: {
         email: data.email.toLowerCase().trim(),
         password: data.passwordHash,
+        role: 'LOJISTA',
       },
     });
     const { password: _p, ...rest } = user;
@@ -26,8 +27,15 @@ export class UserRepository {
   async findByIdSafe(id: string): Promise<UserWithoutPassword | null> {
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, createdAt: true },
+      select: { id: true, email: true, role: true, status: true, lastLoginAt: true, createdAt: true, updatedAt: true },
     });
     return user;
+  }
+
+  async updateLastLogin(id: string): Promise<void> {
+    await prisma.user.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
   }
 }

@@ -5,6 +5,7 @@ import { productRouter } from './product.routes.js';
 import { orderRouter } from './order.routes.js';
 import { supabaseDemoRouter } from './supabase-demo.routes.js';
 import { StoreController } from '../controllers/store.controller.js';
+import { adminRouter } from './admin.routes.js';
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use('/stores', storeRouter);
 router.use('/products', productRouter);
 router.use('/orders', orderRouter);
 router.use('/supabase', supabaseDemoRouter);
+router.use('/admin', adminRouter);
 
 // Public catalog by store slug (no auth)
 router.get('/catalog/:slug', storeController.getBySlug);

@@ -4,6 +4,7 @@ import { env } from "../config/env.js";
 import { AppError } from "../utils/app-error.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import type { UserWithoutPassword } from "../repositories/user.repository.js";
+import type { UserRole } from "@prisma/client";
 import { StoreService } from "./store.service.js";
 
 const SALT_ROUNDS = 12;
@@ -28,7 +29,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await this.users.create({ email, passwordHash });
     await this.stores.ensureDefaultStoreForUser(user.id, user.email);
-    const tokens = this.issueTokens(user.id, user.email);
+    const tokens = this.issueTokens(user.id, user.email, user.role);
     return { user, tokens };
   }
 
@@ -48,7 +49,8 @@ export class AuthService {
 
     const { password: _p, ...user } = userRecord;
     await this.stores.ensureDefaultStoreForUser(user.id, user.email);
-    const tokens = this.issueTokens(user.id, user.email);
+    await this.users.updateLastLogin(user.id);
+    const tokens = this.issueTokens(user.id, user.email, user.role);
     return { user, tokens };
   }
 
@@ -60,8 +62,8 @@ export class AuthService {
     return user;
   }
 
-  private issueTokens(userId: string, email: string): AuthTokens {
-    const payload = { sub: userId, email };
+  private issueTokens(userId: string, email: string, role: UserRole): AuthTokens {
+    const payload = { sub: userId, email, role };
     const accessToken = jwt.sign(payload, env.jwtSecret, {
       expiresIn: env.jwtExpiresIn,
     } as jwt.SignOptions);

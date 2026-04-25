@@ -96,6 +96,9 @@ async function main() {
       password: hashedPassword,
     },
   });
+  // Compatibilidade: define role por SQL para evitar erro de tipagem
+  // quando o Prisma Client local ainda estiver desatualizado.
+  await prisma.$executeRaw`UPDATE "User" SET "role" = 'ADMIN' WHERE "id" = ${user3.id}`;
   console.log('Created user (no store):', user3.email);
 
   // Create orders
