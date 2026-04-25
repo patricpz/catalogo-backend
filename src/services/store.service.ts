@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { StoreRepository } from '../repositories/store.repository.js';
 import { R2StorageService } from './r2-storage.service.js';
 import { extensionForMime } from '../utils/image-file.js';
@@ -9,6 +10,22 @@ export class StoreService {
     private readonly repo: StoreRepository = new StoreRepository(),
     private readonly storage: R2StorageService = new R2StorageService(),
   ) {}
+
+  /** Cria loja padrão se o utilizador ainda não tiver (registo, login ou primeira chamada autenticada). */
+  async ensureDefaultStoreForUser(userId: string, email: string): Promise<void> {
+    const existing = await this.repo.findByUserId(userId);
+    if (existing) return;
+    const local = email.split('@')[0]?.trim() || 'usuario';
+    const safe = local.replace(/[^\w.-]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'usuario';
+    const name = `Loja ${safe}`;
+    const slug = `loja-${randomUUID().replace(/-/g, '')}`;
+    try {
+      await this.repo.create(userId, { name, slug, whatsappNumber: null });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return;
+      throw e;
+    }
+  }
 
   async create(userId: string, data: { name: string; image?: string | null; whatsappNumber?: string | null }) {
     const existing = await this.repo.findByUserId(userId);

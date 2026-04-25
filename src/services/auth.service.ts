@@ -4,13 +4,17 @@ import { env } from "../config/env.js";
 import { AppError } from "../utils/app-error.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import type { UserWithoutPassword } from "../repositories/user.repository.js";
+import { StoreService } from "./store.service.js";
 
 const SALT_ROUNDS = 12;
 
 export type AuthTokens = { accessToken: string; expiresIn: string };
 
 export class AuthService {
-  constructor(private readonly users: UserRepository = new UserRepository()) {}
+  constructor(
+    private readonly users: UserRepository = new UserRepository(),
+    private readonly stores: StoreService = new StoreService(),
+  ) {}
 
   async register(
     email: string,
@@ -23,6 +27,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await this.users.create({ email, passwordHash });
+    await this.stores.ensureDefaultStoreForUser(user.id, user.email);
     const tokens = this.issueTokens(user.id, user.email);
     return { user, tokens };
   }
@@ -42,6 +47,7 @@ export class AuthService {
     }
 
     const { password: _p, ...user } = userRecord;
+    await this.stores.ensureDefaultStoreForUser(user.id, user.email);
     const tokens = this.issueTokens(user.id, user.email);
     return { user, tokens };
   }
