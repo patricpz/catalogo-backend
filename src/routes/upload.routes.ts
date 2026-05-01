@@ -1,25 +1,25 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { ensureStoreMiddleware } from '../middlewares/ensure-store.middleware.js';
-import { StoreController } from '../controllers/store.controller.js';
 import { uploadSingleImage, validateUploadedImageBuffer } from '../middlewares/upload-image.middleware.js';
 import { requireUploadedImage } from '../middlewares/require-uploaded-file.middleware.js';
+import { UserController } from '../controllers/user.controller.js';
+import { StoreController } from '../controllers/store.controller.js';
 
 const router = Router();
-const controller = new StoreController();
+const userController = new UserController();
+const storeController = new StoreController();
 
-router.post('/', authMiddleware, controller.create);
-router.get('/me', authMiddleware, ensureStoreMiddleware, controller.getMe);
+router.use(authMiddleware);
+
+router.post('/avatar', uploadSingleImage, validateUploadedImageBuffer, requireUploadedImage, userController.uploadAvatar);
 router.post(
-  '/image',
-  authMiddleware,
+  '/logo',
   ensureStoreMiddleware,
   uploadSingleImage,
   validateUploadedImageBuffer,
   requireUploadedImage,
-  controller.uploadImage,
+  storeController.uploadLogo,
 );
-router.put('/', authMiddleware, ensureStoreMiddleware, controller.update);
-router.delete('/', authMiddleware, ensureStoreMiddleware, controller.delete);
 
-export { router as storeRouter };
+export { router as uploadRouter };

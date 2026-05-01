@@ -13,12 +13,16 @@ export const authMiddleware: RequestHandler = (req, _res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, env.jwtSecret) as jwt.JwtPayload & { email?: string };
-    if (typeof decoded.sub !== "string" || typeof decoded.email !== "string") {
+    const decoded = jwt.verify(token, env.jwtSecret) as jwt.JwtPayload & { email?: string; role?: string };
+    if (
+      typeof decoded.sub !== "string" ||
+      typeof decoded.email !== "string" ||
+      (decoded.role !== "ADMIN" && decoded.role !== "LOJISTA" && decoded.role !== "CLIENTE")
+    ) {
       next(new AppError(401, "Token inválido", "INVALID_TOKEN"));
       return;
     }
-    req.auth = { sub: decoded.sub, email: decoded.email };
+    req.auth = { sub: decoded.sub, email: decoded.email, role: decoded.role };
     next();
   } catch {
     next(new AppError(401, "Token inválido ou expirado", "INVALID_TOKEN"));

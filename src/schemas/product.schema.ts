@@ -6,6 +6,7 @@ export const createProductBodySchema = z.object({
   image: z.string().url('URL da imagem inválida').optional().nullable(),
   price: z.coerce.number().positive('Preço deve ser maior que zero'),
   available: z.boolean().optional().default(true),
+  status: z.enum(['ATIVO', 'INATIVO']).optional(),
 });
 
 export type CreateProductBody = z.infer<typeof createProductBodySchema>;

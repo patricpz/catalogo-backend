@@ -9,25 +9,63 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  store     Store?
+  id          String     @id @default(uuid())
+  name        String?
+  email       String     @unique
+  phone       String?
+  avatarUrl   String?    @map("avatar_url")
+  password    String
+  role        UserRole   @default(CLIENTE)
+  status      UserStatus @default(ATIVO)
+  lastLoginAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  store       Store?
 }
 
 model Store {
-  id             String    @id @default(uuid())
-  name           String
-  slug           String    @unique
-  image          String?
-  whatsappNumber String?
-  userId         String    @unique
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  products       Product[]
-  orders         Order[]
+  id                String      @id @default(uuid())
+  name              String
+  description       String?
+  slug              String      @unique
+  image             String?
+  logoUrl           String?     @map("logo_url")
+  whatsappNumber    String?
+  phoneWhatsapp     String?     @map("phone_whatsapp")
+  addressLogradouro String?     @map("address_logradouro")
+  addressNumero     String?     @map("address_numero")
+  addressComplemento String?    @map("address_complemento")
+  addressBairro     String?     @map("address_bairro")
+  addressCidade     String?     @map("address_cidade")
+  addressEstado     String?     @map("address_estado")
+  addressCep        String?     @map("address_cep")
+  openingHours      Json?       @map("opening_hours")
+  isOpen            Boolean     @default(true) @map("is_open")
+  primaryColor      String      @default("#1D9E75") @map("primary_color")
+  productCount      Int         @default(0) @map("product_count")
+  overLimit         Boolean     @default(false) @map("over_limit")
+  status            StoreStatus @default(ATIVA)
+  userId            String      @unique
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId            String      @map("plan_id")
+  plan              Plan        @relation(fields: [planId], references: [id])
+  products          Product[]
+  orders            Order[]
+  catalogs          Catalog[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   @@index([slug])
+  @@index([planId])
+}
+
+model Plan {
+  id          String  @id @default(uuid())
+  name        String
+  maxProducts Int     @map("max_products")
+  price       Decimal @db.Decimal(10, 2)
+  features    Json?
+  stores      Store[]
 }
 
 model Product {
@@ -37,21 +75,29 @@ model Product {
   image       String?
   price       Decimal   @db.Decimal(10, 2)
   available   Boolean   @default(true)
+  status      ProductStatus @default(ATIVO)
+  stock       Int       @default(0)
+  category    String?
   storeId     String
   store       Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([storeId])
+  @@index([storeId, status])
 }
 
 model Order {
   id           String      @id @default(uuid())
   total        Decimal     @db.Decimal(10, 2)
+  customerName String      @default("Cliente")
+  status       OrderStatus @default(AGUARDANDO)
+  deliveryAddress String?
   whatsappLink String?
   storeId      String
   store        Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   items        OrderItem[]
+  statusHistory OrderStatusHistory[]
   createdAt    DateTime    @default(now())
 
   @@index([storeId])
@@ -76,4 +122,78 @@ model DemoNote {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@map("demo_notes")
+}
+
+model Catalog {
+  id        String        @id @default(uuid())
+  name      String
+  categories String[]
+  status    CatalogStatus @default(PUBLICADO)
+  storeId   String
+  store     Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([storeId])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String
+  beforeData  Json?
+  afterData   Json?
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId])
+}
+
+enum UserRole {
+  ADMIN
+  LOJISTA
+  CLIENTE
+}
+
+enum UserStatus {
+  ATIVO
+  INATIVO
+  BLOQUEADO
+  PENDENTE
+}
+
+enum StoreStatus {
+  ATIVA
+  INATIVA
+  PENDENTE
+  BLOQUEADA
+}
+
+enum ProductStatus {
+  ATIVO
+  INATIVO
+}
+
+enum OrderStatus {
+  AGUARDANDO
+  EM_ANDAMENTO
+  ENTREGUE
+  CANCELADO
+}
+
+enum CatalogStatus {
+  PUBLICADO
+  PAUSADO
 }
