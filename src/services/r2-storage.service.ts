@@ -28,6 +28,7 @@ export class R2StorageService {
         Key: params.key,
         Body: params.body,
         ContentType: params.contentType,
+        CacheControl: 'public, max-age=31536000, immutable',
       }),
     );
     const encodedKey = params.key
