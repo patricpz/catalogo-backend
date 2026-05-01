@@ -11,8 +11,19 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.store.deleteMany();
+  await prisma.plan.deleteMany();
   await prisma.user.deleteMany();
   console.log('Cleaned existing data.');
+
+  const basicPlan = await prisma.plan.create({
+    data: {
+      id: 'plan-basico',
+      name: 'Básico',
+      maxProducts: 10,
+      price: 49.9,
+      features: { support: 'email' },
+    },
+  });
 
   // Create users with stores
   const hashedPassword = await bcrypt.hash('12345678', 8);
@@ -20,13 +31,18 @@ async function main() {
   // User 1
   const user1 = await prisma.user.create({
     data: {
+      name: 'João',
       email: 'joao@exemplo.com',
       password: hashedPassword,
+      phone: '+5585999990000',
       store: {
         create: {
           name: 'Loja do Joao',
           slug: 'loja-do-joao',
           whatsappNumber: '+5511999999999',
+          phoneWhatsapp: '+5511999999999',
+          primaryColor: '#1D9E75',
+          planId: basicPlan.id,
           products: {
             create: [
               {
@@ -59,13 +75,18 @@ async function main() {
   // User 2
   const user2 = await prisma.user.create({
     data: {
+      name: 'Maria',
       email: 'maria@exemplo.com',
       password: hashedPassword,
+      phone: '+5585988880000',
       store: {
         create: {
           name: 'Boutique da Maria',
           slug: 'boutique-da-maria',
           whatsappNumber: '+5511888888888',
+          phoneWhatsapp: '+5511888888888',
+          primaryColor: '#1D9E75',
+          planId: basicPlan.id,
           products: {
             create: [
               {

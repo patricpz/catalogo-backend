@@ -73,12 +73,15 @@ export class OrderService {
   }
 
   private generateWhatsappLink(
-    store: { whatsappNumber: string | null; name: string },
+    store: { phoneWhatsapp?: string | null; whatsappNumber?: string | null; name: string },
     order: { id: string; total: unknown; items: { product: string; price: unknown; quantity: number }[] },
   ): string {
-    if (!store.whatsappNumber) return '';
+    const whatsapp = store.phoneWhatsapp ?? store.whatsappNumber;
+    if (!whatsapp) {
+      throw new AppError(400, 'Configure o WhatsApp da loja antes de gerar pedidos', 'WHATSAPP_NOT_SET');
+    }
 
-    const phone = store.whatsappNumber.replace(/\D/g, '');
+    const phone = whatsapp.replace(/\D/g, '');
     const itemsText = order.items
       .map((i) => `• ${i.product} | Qtd: ${i.quantity} | R$ ${(Number(i.price) * i.quantity).toFixed(2)}`)
       .join('\n');
