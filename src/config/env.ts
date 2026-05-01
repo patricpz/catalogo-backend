@@ -25,4 +25,7 @@ export const env = {
     process.env.CORS_ORIGIN?.split(',').map((s) => s.trim()).filter(Boolean) ??
     ['http://localhost:3000'],
   appUrl: process.env.APP_URL ?? 'http://localhost:4000',
+  keepAliveEnabled: process.env.KEEP_ALIVE_ENABLED === 'true',
+  keepAliveUrl: process.env.KEEP_ALIVE_URL ?? `${process.env.APP_URL ?? 'http://localhost:4000'}/api/health`,
+  keepAliveIntervalMs: Number(process.env.KEEP_ALIVE_INTERVAL_MS ?? 240000),
 };
